@@ -7,7 +7,7 @@ import {
   Settings, LogOut, CheckCircle, Smartphone, Globe, Brain, QrCode
 } from 'lucide-react';
 import { identity } from '@/lib/identity';
-import { ShivAIUser, ActivityLog, Device } from '@shivai/identity-sdk';
+import { ShivAIUser, ActivityLog, Device } from '@/lib/sdk';
 import { QRCodeSVG } from 'qrcode.react';
 import { DateTime } from 'luxon';
 

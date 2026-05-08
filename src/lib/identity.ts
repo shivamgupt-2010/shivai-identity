@@ -1,4 +1,4 @@
-import { ShivAIIdentity } from '@shivai/identity-sdk';
+import { ShivAIIdentity } from './sdk';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
