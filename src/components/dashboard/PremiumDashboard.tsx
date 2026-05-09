@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Shield, Mail, MessageCircle, Cloud, Clock, RefreshCw, 
-  Settings, LogOut, CheckCircle, Smartphone, Globe, Brain, QrCode
+  Settings, LogOut, CheckCircle, Smartphone, Globe, Brain, QrCode,
+  Calendar, MapPin
 } from 'lucide-react';
 import { identity } from '@/lib/identity';
 import { ShivAIUser, ActivityLog, Device } from '@/lib/sdk';
@@ -73,6 +74,20 @@ export default function PremiumDashboard() {
                   <span className="text-blue-400 font-bold">@{user.username || 'user'}</span>
                   <CheckCircle size={14} className="fill-blue-500 text-[#050505]" />
                </div>
+               <p className="text-xs text-gray-500 font-bold mt-2 lowercase">{user.email}</p>
+            </div>
+
+            <div className="mt-8 grid grid-cols-2 gap-4">
+               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                  <Calendar size={14} className="text-gray-500 mb-2" />
+                  <p className="text-[10px] font-black uppercase text-gray-600">DOB</p>
+                  <p className="text-xs font-bold text-gray-300">{user.dob ? DateTime.fromISO(user.dob).toLocaleString(DateTime.DATE_MED) : 'N/A'}</p>
+               </div>
+               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                  <MapPin size={14} className="text-gray-500 mb-2" />
+                  <p className="text-[10px] font-black uppercase text-gray-600">Country</p>
+                  <p className="text-xs font-bold text-gray-300">{user.country || 'N/A'}</p>
+               </div>
             </div>
 
             <div className="mt-8 pt-8 border-t border-white/5 space-y-6 relative">
@@ -100,9 +115,8 @@ export default function PremiumDashboard() {
                 <h3 className="font-bold">Security Shield</h3>
              </div>
              <div className="space-y-4">
-                <SecurityStat label="Device Encryption" status="Active" />
-                <SecurityStat label="Session Token" status="Rotated" />
-                <SecurityStat label="Behavioral Lock" status="Armed" />
+                <SecurityStat label="Identity Verified" status={user.isVerified ? "Trusted" : "Standard"} />
+                <SecurityStat label="Account Status" status="Active" />
              </div>
           </div>
         </div>
@@ -117,7 +131,7 @@ export default function PremiumDashboard() {
                 </div>
                 <div>
                    <h2 className="text-2xl font-black text-white italic">ShivAI Intelligence</h2>
-                   <p className="text-blue-100 text-sm">Supabase-powered ecosystem logic.</p>
+                   <p className="text-blue-100 text-sm">Processing real-time identity signals.</p>
                 </div>
              </div>
              <div className="relative bg-[#00000030] px-8 py-5 rounded-[2rem] backdrop-blur-md border border-white/10">
@@ -136,10 +150,10 @@ export default function PremiumDashboard() {
           <div className="bg-[#0a0a0a] border border-white/10 p-8 rounded-[2.5rem]">
              <h3 className="text-lg font-bold mb-8 flex items-center gap-3">
                 <Clock className="text-blue-400" size={20} />
-                Recent History
+                Identity Timeline
              </h3>
              <div className="space-y-6">
-                {timeline.map((log) => (
+                {timeline.length > 0 ? timeline.map((log) => (
                    <div key={log.id} className="flex gap-4 items-start">
                       <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
                       <div>
@@ -148,7 +162,9 @@ export default function PremiumDashboard() {
                          <p className="text-[9px] font-black uppercase text-gray-600 mt-2">{DateTime.fromISO(log.created_at).toRelative()}</p>
                       </div>
                    </div>
-                ))}
+                )) : (
+                   <p className="text-sm text-gray-600 italic">No recent activities recorded.</p>
+                )}
              </div>
           </div>
         </div>

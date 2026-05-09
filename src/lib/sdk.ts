@@ -8,6 +8,8 @@ export interface ShivAIUser extends User {
   bio?: string;
   theme?: string;
   isVerified?: boolean;
+  dob?: string;
+  country?: string;
 }
 
 export interface ActivityLog {
@@ -32,23 +34,21 @@ export class ShivAIIdentity {
     this.supabase = createClient(supabaseUrl, supabaseAnonKey);
   }
 
-  // AUTH
-  async createIdentity(email: string, metadata: any = {}) {
-    return await this.supabase.auth.signInWithOtp({
+  // AUTH (Password-based for @shiv.ai handles)
+  async signUp(email: string, password: string, metadata: any = {}) {
+    return await this.supabase.auth.signUp({
       email,
+      password,
       options: {
         data: metadata,
-        emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
       },
     });
   }
 
-  async login(email: string) {
-    return await this.supabase.auth.signInWithOtp({
+  async login(email: string, password: string) {
+    return await this.supabase.auth.signInWithPassword({
       email,
-      options: {
-        emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
-      },
+      password,
     });
   }
 
@@ -76,6 +76,8 @@ export class ShivAIIdentity {
       bio: profile?.bio,
       theme: profile?.theme,
       isVerified: profile?.is_verified,
+      dob: profile?.dob,
+      country: profile?.country,
     };
   }
 
@@ -91,18 +93,26 @@ export class ShivAIIdentity {
 
   // ECOSYSTEM INTEL
   async getTimeline(): Promise<ActivityLog[]> {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) return [];
+
     const { data } = await this.supabase
       .from('activity_logs')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(10);
     return data || [];
   }
 
   async getDevices(): Promise<Device[]> {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) return [];
+
     const { data } = await this.supabase
       .from('devices')
       .select('*')
+      .eq('user_id', user.id)
       .order('last_active', { ascending: false });
     return data || [];
   }
