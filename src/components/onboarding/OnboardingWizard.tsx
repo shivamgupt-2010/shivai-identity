@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Mail, Shield, CheckCircle, ArrowRight, ArrowLeft, Lock, Globe, Calendar } from 'lucide-react';
-import { identity } from '@/lib/sdk';
+import { shivai } from '@/lib/sdk';
 
 export default function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(1);
@@ -37,11 +37,11 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
 
     try {
       if (isLogin) {
-        const { data, error } = await identity.login(formData.email, formData.password);
+        const { data, error } = await shivai.login(formData.email, formData.password);
         if (error) throw error;
         onComplete();
       } else {
-        const { data, error } = await identity.signUp(formData.email, formData.password, {
+        const { data, error } = await shivai.signUp(formData.email, formData.password, {
             full_name: formData.fullName,
             username: formData.username,
             dob: formData.dob,

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, ArrowRight } from 'lucide-react';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import PremiumDashboard from '@/components/dashboard/PremiumDashboard';
-import { identity } from '@/lib/sdk';
+import { shivai } from '@/lib/sdk';
 
 export default function Home() {
   const [view, setView] = useState<'welcome' | 'onboarding' | 'dashboard'>('welcome');
@@ -13,7 +13,7 @@ export default function Home() {
 
   useEffect(() => {
     const checkAuth = async () => {
-        const u = await identity.getCurrentUser();
+        const u = await shivai.getCurrentUser();
         if (u) {
             setView('dashboard');
         }

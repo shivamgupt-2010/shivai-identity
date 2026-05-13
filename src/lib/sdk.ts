@@ -209,7 +209,8 @@ export class ShivAISDK {
 }
 
 // Global Export for Ecosystem Sync
-export const identity = ShivAISDK.getInstance(
+export const shivai = ShivAISDK.getInstance(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+export const identity = shivai;

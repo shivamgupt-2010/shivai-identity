@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { identity, ShivAIProfile, EcosystemNode } from '@/lib/sdk';
+import { shivai, ShivAIProfile, EcosystemNode } from '@/lib/sdk';
 import { 
   Shield, Brain, Zap, Globe, Activity, 
   Smartphone, QrCode, Lock, LogOut, CheckCircle 
@@ -21,11 +21,11 @@ export default function ProductionDashboard() {
   useEffect(() => {
     // 1. Initial Load
     const init = async () => {
-      const user = await identity.getCurrentUser();
+      const user = await shivai.getCurrentUser();
       if (user) {
         const [p, n] = await Promise.all([
-          identity.getProfile(user.id),
-          identity.getEcosystemGraph()
+          shivai.getProfile(user.id),
+          shivai.getEcosystemGraph()
         ]);
         setProfile(p);
         setNodes(n);
@@ -36,11 +36,11 @@ export default function ProductionDashboard() {
     init();
 
     // 2. Real-time Sync
-    const { data: { subscription } } = identity.onAuthStateChange(async (session: any) => {
+    const { data: { subscription } } = shivai.onAuthStateChange(async (session: any) => {
       if (session) {
         const [p, n] = await Promise.all([
-          identity.getProfile(session.user.id),
-          identity.getEcosystemGraph()
+          shivai.getProfile(session.user.id),
+          shivai.getEcosystemGraph()
         ]);
         setProfile(p);
         setNodes(n);
@@ -60,8 +60,8 @@ export default function ProductionDashboard() {
   }, []);
 
   const handleLogout = async () => {
-    await identity.logout();
-    window.location.href = '/';
+    await shivai.logout();
+    window.location.reload();
   };
 
   if (loading) return <LoadingState />;
