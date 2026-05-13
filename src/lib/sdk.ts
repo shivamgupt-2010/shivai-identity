@@ -1,23 +1,30 @@
-import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
 
-export interface ShivAIUser extends User {
-  behaviorScore?: number;
-  permissions?: string[];
-  username?: string;
-  fullName?: string;
-  bio?: string;
-  theme?: string;
-  isVerified?: boolean;
+/**
+ * PRODUCTION-GRADE SHIVAI IDENTITY SDK
+ * Version: 2.1.0-STABLE
+ */
+
+export interface ShivAIProfile {
+  id: string;
+  username: string;
+  full_name: string;
+  avatar_url?: string;
   dob?: string;
   country?: string;
-  identityStrength?: number;
-  riskLevel?: string;
-  neuralPatternStatus?: string;
-  isLocked?: boolean;
-  trustScore?: number;
-  verificationLevel?: number;
-  humanConfidence?: number;
+  identity_strength: number;
+  trust_score: number;
+  behavior_score: number;
+  status: 'active' | 'suspended' | 'lockdown';
+  is_verified: boolean;
+  metadata: Record<string, any>;
+  neural_pattern_status?: string;
+  is_locked?: boolean;
+  verification_level?: number;
+  human_confidence?: number;
 }
+
+export interface ShivAIUser extends User, ShivAIProfile {}
 
 export interface ActivityLog {
   id: string;
@@ -47,11 +54,19 @@ export interface EcosystemNode {
   connections: string[];
 }
 
-export class ShivAIIdentity {
-  private supabase: SupabaseClient;
+export class ShivAISDK {
+  private static instance: ShivAISDK;
+  public supabase: SupabaseClient;
 
-  constructor(supabaseUrl: string, supabaseAnonKey: string) {
-    this.supabase = createClient(supabaseUrl, supabaseAnonKey);
+  private constructor(url: string, key: string) {
+    this.supabase = createClient(url, key);
+  }
+
+  public static getInstance(url: string, key: string): ShivAISDK {
+    if (!ShivAISDK.instance) {
+      ShivAISDK.instance = new ShivAISDK(url, key);
+    }
+    return ShivAISDK.instance;
   }
 
   // AUTH
@@ -73,43 +88,28 @@ export class ShivAIIdentity {
   }
 
   async logout() {
-    return await this.supabase.auth.signOut();
+    await this.supabase.auth.signOut();
   }
 
   // PROFILE & INTEL
-  async getCurrentUser(): Promise<ShivAIUser | null> {
+  async getCurrentUser(): Promise<User | null> {
     const { data: { user } } = await this.supabase.auth.getUser();
-    if (!user) return null;
+    return user;
+  }
 
-    const { data: profile } = await this.supabase
+  async getProfile(userId: string): Promise<ShivAIProfile | null> {
+    const { data, error } = await this.supabase
       .from('profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
-
-    return {
-      ...user,
-      behaviorScore: profile?.behavior_score,
-      permissions: profile?.permissions,
-      username: profile?.username,
-      fullName: profile?.full_name,
-      bio: profile?.bio,
-      theme: profile?.theme,
-      isVerified: profile?.is_verified,
-      dob: profile?.dob,
-      country: profile?.country,
-      identityStrength: profile?.identity_strength,
-      riskLevel: profile?.risk_level,
-      neuralPatternStatus: profile?.neural_pattern_status,
-      isLocked: profile?.is_locked,
-      trustScore: profile?.trust_score,
-      verificationLevel: profile?.verification_level,
-      humanConfidence: profile?.human_confidence,
-    };
+    
+    if (error) return null;
+    return data as ShivAIProfile;
   }
 
   async updateProfile(updates: any) {
-    const { data: { user } } = await this.supabase.auth.getUser();
+    const user = await this.getCurrentUser();
     if (!user) throw new Error('Not authenticated');
 
     return await this.supabase
@@ -119,13 +119,13 @@ export class ShivAIIdentity {
   }
 
   async triggerIntelligenceRefresh() {
-    const { data: { user } } = await this.supabase.auth.getUser();
+    const user = await this.getCurrentUser();
     if (!user) return;
     await this.supabase.rpc('calculate_identity_strength', { p_user_id: user.id });
   }
 
   async lockdown() {
-    const { data: { user } } = await this.supabase.auth.getUser();
+    const user = await this.getCurrentUser();
     if (!user) return;
     await this.supabase.rpc('lockdown_ecosystem', { p_user_id: user.id });
     await this.logout();
@@ -133,11 +133,11 @@ export class ShivAIIdentity {
 
   // ECOSYSTEM
   async getTimeline(): Promise<ActivityLog[]> {
-    const { data: { user } } = await this.supabase.auth.getUser();
+    const user = await this.getCurrentUser();
     if (!user) return [];
 
     const { data } = await this.supabase
-      .from('activity_logs')
+      .from('ecosystem_logs')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
@@ -146,7 +146,7 @@ export class ShivAIIdentity {
   }
 
   async getDevices(): Promise<Device[]> {
-    const { data: { user } } = await this.supabase.auth.getUser();
+    const user = await this.getCurrentUser();
     if (!user) return [];
 
     const { data } = await this.supabase
@@ -158,7 +158,7 @@ export class ShivAIIdentity {
   }
 
   async getEcosystemGraph(): Promise<EcosystemNode[]> {
-    const { data: { user } } = await this.supabase.auth.getUser();
+    const user = await this.getCurrentUser();
     if (!user) return [];
 
     const { data: apps } = await this.supabase
@@ -185,19 +185,25 @@ export class ShivAIIdentity {
     return nodes;
   }
 
-  async trackAction(action: string, description: string, metadata: any = {}) {
-    const { data: { user } } = await this.supabase.auth.getUser();
+  async trackAction(appId: string, action: string, description: string, metadata: any = {}) {
+    const user = await this.getCurrentUser();
     if (!user) return;
 
-    await this.supabase.from('activity_logs').insert({
+    await this.supabase.from('ecosystem_logs').insert({
       user_id: user.id,
+      app_id: appId,
       action,
-      description,
-      metadata
+      metadata: { ...metadata, description }
     });
     
     // Silent background logic to improve score
     await this.supabase.rpc('increment_behavior_score', { user_id: user.id, amount: 0.05 });
     await this.triggerIntelligenceRefresh();
+  }
+
+  onAuthStateChange(callback: (session: Session | null) => void) {
+    return this.supabase.auth.onAuthStateChange((_event, session) => {
+      callback(session);
+    });
   }
 }

@@ -1,23 +1,23 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ShivAIUser } from '@/lib/sdk';
+import { ShivAIProfile } from '@/lib/sdk';
 
 interface DigitalDNAProps {
-  user: ShivAIUser;
+  profile: ShivAIProfile;
 }
 
-export default function DigitalDNA({ user }: DigitalDNAProps) {
+export default function DigitalDNA({ profile }: DigitalDNAProps) {
   return (
     <div className="bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-8 overflow-hidden relative group">
-       <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:opacity-40 transition-opacity">
+       <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:opacity-40 transition-opacity text-blue-500">
           <div className="flex gap-1 items-end h-8">
              {[0.4, 0.7, 0.2, 0.9, 0.5, 0.8, 0.3, 0.6].map((h, i) => (
                 <motion.div 
                    key={i}
                    animate={{ height: [`${h*100}%`, `${(1-h)*100}%`, `${h*100}%`] }}
                    transition={{ duration: 1.5 + i*0.2, repeat: Infinity }}
-                   className="w-1 bg-blue-500 rounded-full"
+                   className="w-1 bg-current rounded-full"
                 />
              ))}
           </div>
@@ -27,8 +27,8 @@ export default function DigitalDNA({ user }: DigitalDNAProps) {
           <h3 className="text-sm font-black text-white uppercase tracking-[0.3em] mb-8 italic">Digital DNA Signature</h3>
           
           <div className="space-y-6">
-             <DNAMetric label="Neural Pattern" value={user.neuralPatternStatus || 'STABLE'} color="text-blue-400" />
-             <DNAMetric label="Behavior Match" value="98.2%" color="text-emerald-400" />
+             <DNAMetric label="Neural Pattern" value={profile.neural_pattern_status || 'STABLE'} color="text-blue-400" />
+             <DNAMetric label="Behavior Match" value={`${(profile.behavior_score * 98.2).toFixed(1)}%`} color="text-emerald-400" />
              <DNAMetric label="Threat Prob." value="0.01%" color="text-white/40" />
              <DNAMetric label="DNA Integrity" value="VERIFIED" color="text-blue-500" />
           </div>

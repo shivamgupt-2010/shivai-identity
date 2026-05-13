@@ -1,16 +1,16 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ShivAIUser } from '@/lib/sdk';
+import { ShivAIProfile } from '@/lib/sdk';
 import { Brain, ShieldCheck, Activity, Zap } from 'lucide-react';
 
 interface IntelligenceScoreProps {
-  user: ShivAIUser;
+  profile: ShivAIProfile;
 }
 
-export default function IntelligenceScore({ user }: IntelligenceScoreProps) {
-  const strength = user.identityStrength || 0;
-  const confidence = user.humanConfidence || 0;
+export default function IntelligenceScore({ profile }: IntelligenceScoreProps) {
+  const strength = profile.identity_strength || 0;
+  const confidence = profile.human_confidence || 0;
   
   return (
     <div className="p-8 bg-gradient-to-br from-blue-600/20 to-indigo-800/20 rounded-[3rem] border border-white/10 relative overflow-hidden group">
@@ -46,7 +46,7 @@ export default function IntelligenceScore({ user }: IntelligenceScoreProps) {
              />
              <MetricCard 
                 label="Trust Level" 
-                value={user.riskLevel || 'Low'} 
+                value={profile.trust_score > 0.8 ? 'Elite' : 'Stable'} 
                 icon={<Activity size={14} />} 
                 color="text-emerald-400"
                 progress={100}
@@ -60,7 +60,7 @@ export default function IntelligenceScore({ user }: IntelligenceScoreProps) {
              />
              <MetricCard 
                 label="Security" 
-                value={user.verificationLevel === 5 ? 'Sovereign' : 'Verified'} 
+                value={profile.verification_level === 5 ? 'Sovereign' : 'Verified'} 
                 icon={<ShieldCheck size={14} />} 
                 color="text-indigo-400"
                 progress={80}
