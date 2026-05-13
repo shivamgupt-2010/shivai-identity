@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Mail, Shield, CheckCircle, ArrowRight, ArrowLeft, Lock, Globe, Calendar } from 'lucide-react';
-import { identity } from '@/lib/identity';
+import { identity } from '@/lib/sdk';
 
 export default function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(1);

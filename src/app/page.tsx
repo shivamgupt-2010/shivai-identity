@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, ArrowRight } from 'lucide-react';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import PremiumDashboard from '@/components/dashboard/PremiumDashboard';
-import { identity } from '@/lib/identity';
+import { identity } from '@/lib/sdk';
 
 export default function Home() {
   const [view, setView] = useState<'welcome' | 'onboarding' | 'dashboard'>('welcome');

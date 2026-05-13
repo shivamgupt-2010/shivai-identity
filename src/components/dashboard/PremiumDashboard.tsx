@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { shivai, ShivAIProfile, EcosystemNode } from '@/lib/sdk';
+import { identity, ShivAIProfile, EcosystemNode } from '@/lib/sdk';
 import { 
   Shield, Brain, Zap, Globe, Activity, 
   Smartphone, QrCode, Lock, LogOut, CheckCircle 
@@ -21,11 +21,11 @@ export default function ProductionDashboard() {
   useEffect(() => {
     // 1. Initial Load
     const init = async () => {
-      const user = await shivai.getCurrentUser();
+      const user = await identity.getCurrentUser();
       if (user) {
         const [p, n] = await Promise.all([
-          shivai.getProfile(user.id),
-          shivai.getEcosystemGraph()
+          identity.getProfile(user.id),
+          identity.getEcosystemGraph()
         ]);
         setProfile(p);
         setNodes(n);
@@ -36,11 +36,11 @@ export default function ProductionDashboard() {
     init();
 
     // 2. Real-time Sync
-    const { data: { subscription } } = shivai.onAuthStateChange(async (session) => {
+    const { data: { subscription } } = identity.onAuthStateChange(async (session: any) => {
       if (session) {
         const [p, n] = await Promise.all([
-          shivai.getProfile(session.user.id),
-          shivai.getEcosystemGraph()
+          identity.getProfile(session.user.id),
+          identity.getEcosystemGraph()
         ]);
         setProfile(p);
         setNodes(n);
@@ -58,6 +58,11 @@ export default function ProductionDashboard() {
       clearInterval(interval);
     };
   }, []);
+
+  const handleLogout = async () => {
+    await identity.logout();
+    window.location.href = '/';
+  };
 
   if (loading) return <LoadingState />;
   if (!profile) return <UnauthorizedState />;
@@ -93,7 +98,7 @@ export default function ProductionDashboard() {
                  <p className="text-sm font-black text-blue-400 mt-1">@{profile.username}</p>
               </div>
               <button 
-                 onClick={() => shivai.logout().then(() => window.location.reload())}
+                 onClick={handleLogout}
                  className="p-4 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all rounded-xl"
               >
                  <LogOut size={18} />
