@@ -169,17 +169,24 @@ export class ShivAISDK {
     const nodes: EcosystemNode[] = [
       { id: 'core', label: 'AI Core', status: 'online', type: 'core', connections: ['identity'] },
       { id: 'identity', label: 'Identity Hub', status: 'online', type: 'app', connections: ['core'] },
+      { id: 'drive', label: 'ShivAI Drive', status: 'online', type: 'app', connections: ['identity'] },
+      { id: 'mail', label: 'ShivAI Mail', status: 'offline', type: 'app', connections: ['identity'] },
+      { id: 'connect', label: 'VibeConnect', status: 'offline', type: 'app', connections: ['identity'] },
     ];
 
+    nodes[1].connections.push('drive', 'mail', 'connect');
+
     apps?.forEach(app => {
-      nodes.push({
-        id: app.id,
-        label: app.app_name,
-        status: app.status === 'Active' ? 'online' : 'offline',
-        type: 'app',
-        connections: ['identity']
-      });
-      nodes[1].connections.push(app.id);
+      if (!nodes.find(n => n.label === app.app_name)) {
+        nodes.push({
+          id: app.id,
+          label: app.app_name,
+          status: app.status === 'Active' ? 'online' : 'offline',
+          type: 'app',
+          connections: ['identity']
+        });
+        nodes[1].connections.push(app.id);
+      }
     });
 
     return nodes;
@@ -197,7 +204,7 @@ export class ShivAISDK {
     });
     
     // Silent background logic to improve score
-    await this.supabase.rpc('increment_behavior_score', { user_id: user.id, amount: 0.05 });
+    await this.supabase.rpc('increment_behavior_score', { user_id: user.id, amount: 0.1 });
     await this.triggerIntelligenceRefresh();
   }
 
@@ -205,6 +212,19 @@ export class ShivAISDK {
     return this.supabase.auth.onAuthStateChange((_event, session) => {
       callback(session);
     });
+  }
+
+  // PRESENCE
+  trackPresence(channelName: string, userData: any) {
+    const channel = this.supabase.channel(channelName, {
+      config: {
+        presence: {
+          key: userData.id,
+        },
+      },
+    });
+
+    return channel;
   }
 }
 

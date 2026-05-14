@@ -10,15 +10,19 @@ import {
 import IntelligenceScore from './IntelligenceScore';
 import EcosystemGraph from './EcosystemGraph';
 import DigitalDNA from './DigitalDNA';
+import ActivityTimeline from './ActivityTimeline';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function ProductionDashboard() {
   const [profile, setProfile] = useState<ShivAIProfile | null>(null);
   const [nodes, setNodes] = useState<EcosystemNode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeNeurons, setActiveNeurons] = useState(1);
   const [qrToken, setQrToken] = useState(Math.random().toString(36).substring(7));
 
   useEffect(() => {
+    let presenceChannel: any = null;
+
     // 1. Initial Load
     const init = async () => {
       const user = await shivai.getCurrentUser();
@@ -29,6 +33,15 @@ export default function ProductionDashboard() {
         ]);
         setProfile(p);
         setNodes(n);
+
+        // Track Presence
+        presenceChannel = shivai.trackPresence('identity_presence', { id: user.id, username: p?.username });
+        presenceChannel
+          .on('presence', { event: 'sync' }, () => {
+            const state = presenceChannel.presenceState();
+            setActiveNeurons(Object.keys(state).length);
+          })
+          .subscribe();
       }
       setLoading(false);
     };
@@ -56,6 +69,7 @@ export default function ProductionDashboard() {
     return () => {
       subscription.unsubscribe();
       clearInterval(interval);
+      if (presenceChannel) presenceChannel.unsubscribe();
     };
   }, []);
 
@@ -86,8 +100,8 @@ export default function ProductionDashboard() {
               <div>
                  <h1 className="text-3xl font-black italic uppercase tracking-tighter">ShivAI Identity <span className="text-blue-500">Hub</span></h1>
                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs font-bold text-gray-500">Neural Sync: ACTIVE</span>
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Active Neurons: {activeNeurons}</span>
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
                  </div>
               </div>
            </div>
@@ -173,6 +187,8 @@ export default function ProductionDashboard() {
                     <SecurityRow label="Threat Index" value="MINIMAL" status="success" />
                  </div>
               </section>
+
+              <ActivityTimeline />
            </div>
         </div>
       </div>
